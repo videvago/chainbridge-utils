@@ -10,9 +10,9 @@ import (
 
 type ChainId uint8
 type TransferType string
-type ResourceId [32]byte
+type Bytes32 [32]byte
 
-func (r ResourceId) Hex() string {
+func (r Bytes32) Hex() string {
 	return fmt.Sprintf("%x", r)
 }
 
@@ -28,45 +28,18 @@ var GenericTransfer TransferType = "GenericTransfer"
 
 // Message is used as a generic format to communicate between chains
 type Message struct {
+	DepositKey   Bytes32      // The key which identifies the proposal
 	Source       ChainId      // Source where message was initiated
 	Destination  ChainId      // Destination chain of message
 	Type         TransferType // type of bridge transfer
 	DepositNonce Nonce        // Nonce for the deposit
-	ResourceId   ResourceId
+	ResourceId   Bytes32
 	Payload      []interface{} // data associated with event sequence
 }
 
-func NewFungibleTransfer(source, dest ChainId, nonce Nonce, amount *big.Int, resourceId ResourceId, recipient []byte) Message {
+func NewGenericTransfer(source, dest ChainId, nonce Nonce, depositKey Bytes32, resourceId Bytes32, metadata []byte) Message {
 	return Message{
-		Source:       source,
-		Destination:  dest,
-		Type:         FungibleTransfer,
-		DepositNonce: nonce,
-		ResourceId:   resourceId,
-		Payload: []interface{}{
-			amount.Bytes(),
-			recipient,
-		},
-	}
-}
-
-func NewNonFungibleTransfer(source, dest ChainId, nonce Nonce, resourceId ResourceId, tokenId *big.Int, recipient, metadata []byte) Message {
-	return Message{
-		Source:       source,
-		Destination:  dest,
-		Type:         NonFungibleTransfer,
-		DepositNonce: nonce,
-		ResourceId:   resourceId,
-		Payload: []interface{}{
-			tokenId.Bytes(),
-			recipient,
-			metadata,
-		},
-	}
-}
-
-func NewGenericTransfer(source, dest ChainId, nonce Nonce, resourceId ResourceId, metadata []byte) Message {
-	return Message{
+		DepositKey:   depositKey,
 		Source:       source,
 		Destination:  dest,
 		Type:         GenericTransfer,
@@ -78,8 +51,8 @@ func NewGenericTransfer(source, dest ChainId, nonce Nonce, resourceId ResourceId
 	}
 }
 
-func ResourceIdFromSlice(in []byte) ResourceId {
-	var res ResourceId
+func Bytes32FromSlice(in []byte) Bytes32 {
+	var res Bytes32
 	copy(res[:], in)
 	return res
 }
